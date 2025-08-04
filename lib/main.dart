@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:game/components/fancybutton.dart';
+import 'package:game/screens/home_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,24 +30,30 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final List<Map<String, String>> slideData = [
     {
       'title': 'Challenge Players Worldwide',
-      'description': 'Compete in real-time brain duels with players from around the globe. Test your skills and climb the leaderboard!',
-      'animation': 'assets/animations/Battle.json'  // Changed to local file
+      'description':
+          'Compete in real-time brain duels with players from around the globe. Test your skills and climb the leaderboard!',
+      'animation': 'assets/animations/Battle.json', // Changed to local file
     },
     {
       'title': 'Fast-Paced Brain Training',
-      'description': 'Quick thinking wins! Solve puzzles faster than your opponent to claim victory in exciting duels.',
-      'animation': 'assets/animations/First Place.json'  // Changed to local file
+      'description':
+          'Quick thinking wins! Solve puzzles faster than your opponent to claim victory in exciting duels.',
+      'animation':
+          'assets/animations/First Place.json', // Changed to local file
     },
     {
       'title': 'Climb the Leaderboard',
-      'description': 'Track your progress, earn achievements, and become the ultimate brain champion among millions.',
-      'animation': 'assets/animations/level up.json'  // Changed to local file
+      'description':
+          'Track your progress, earn achievements, and become the ultimate brain champion among millions.',
+      'animation': 'assets/animations/level up.json', // Changed to local file
     },
     {
       'title': 'Ready to Play?',
-      'description': 'Jump in instantly as a guest or create an account to save your progress and compete with friends.',
-      'animation': 'assets/animations/Girl tapping phone.json'  // Changed to local file
-    }
+      'description':
+          'Jump in instantly as a guest or create an account to save your progress and compete with friends.',
+      'animation':
+          'assets/animations/Girl tapping phone.json', // Changed to local file
+    },
   ];
 
   @override
@@ -108,7 +115,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           Container(
             height: 300,
             width: 300,
-            child: Lottie.asset(  // Changed from Lottie.network to Lottie.asset
+            child: Lottie.asset(
+              // Changed from Lottie.network to Lottie.asset
               slideData[index]['animation']!,
               repeat: true,
               animate: true,
@@ -125,18 +133,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.animation,
-                        size: 80,
-                        color: Colors.white54,
-                      ),
+                      Icon(Icons.animation, size: 80, color: Colors.white54),
                       SizedBox(height: 16),
                       Text(
                         'Animation not found',
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
                       ),
                     ],
                   ),
@@ -233,7 +234,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   height: 200,
                   width: 200,
                   child: Lottie.asset(
-                    'assets/animations/login.json',  // Login animation
+                    'assets/animations/login.json', // Login animation
                     repeat: false,
                     animate: true,
                     fit: BoxFit.contain,
@@ -241,8 +242,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       // Auto-close after animation completes
                       Future.delayed(composition.duration, () {
                         Navigator.of(context).pop();
-                        print('Navigate to Login/Guest Screen');
-                        // Add your navigation logic here
+                        print('Navigate to Home Screen');
+                        // Navigate to home screen
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                        );
                       });
                     },
                   ),
@@ -250,10 +254,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 SizedBox(height: 20),
                 Text(
                   'Loading...',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ],
             ),

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Puzzle Duel Test</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .connected {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .waiting {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .game {
+        background-color: #d1ecf1;
+        color: #0c5460;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+      input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Puzzle Duel - Connection Test</h1>
+
+      <div id="status" class="status disconnected">
+        Disconnected from server
+      </div>
+
+      <div>
+        <input
+          type="text"
+          id="playerName"
+          placeholder="Enter your name"
+          value="TestPlayer"
+        />
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+      </div>
+
+      <div>
+        <button onclick="joinGame()" id="joinBtn" disabled>Join Game</button>
+        <button onclick="leaveGame()" id="leaveBtn" disabled>Leave Game</button>
+      </div>
+
+      <div id="gameInfo" style="display: none">
+        <h3>Game Info</h3>
+        <div id="gameStatus"></div>
+        <div id="puzzleInfo"></div>
+        <div id="answerButtons"></div>
+      </div>
+
+      <div
+        id="logs"
+        style="
+          margin-top: 20px;
+          padding: 10px;
+          background-color: #f8f9fa;
+          border-radius: 5px;
+          max-height: 200px;
+          overflow-y: auto;
+        "
+      >
+        <h4>Connection Logs:</h4>
+        <div id="logContent"></div>
+      </div>
+    </div>
+
+    <script>
+      let socket = null;
+      let currentGame = null;
+      let currentPlayer = null;
+
+      function log(message) {
+        const logContent = document.getElementById("logContent");
+        const timestamp = new Date().toLocaleTimeString();
+        logContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        logContent.scrollTop = logContent.scrollHeight;
+      }
+
+      function updateStatus(message, className) {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = `status ${className}`;
+      }
+
+      function connect() {
+        log("Attempting to connect to server...");
+
+        socket = io("http://localhost:3000", {
+          transports: ["websocket"],
+          timeout: 5000,
+        });
+
+        socket.on("connect", () => {
+          log("Connected to server!");
+          updateStatus("Connected to server", "connected");
+          document.getElementById("joinBtn").disabled = false;
+        });
+
+        socket.on("disconnect", () => {
+          log("Disconnected from server");
+          updateStatus("Disconnected from server", "disconnected");
+          document.getElementById("joinBtn").disabled = true;
+          document.getElementById("leaveBtn").disabled = true;
+          document.getElementById("gameInfo").style.display = "none";
+        });
+
+        socket.on("waitingForOpponent", (data) => {
+          log("Waiting for opponent: " + JSON.stringify(data));
+          updateStatus("Looking for opponent...", "waiting");
+        });
+
+        socket.on("gameState", (data) => {
+          log("Game state received: " + JSON.stringify(data));
+          currentGame = data;
+          updateStatus("Game in progress", "game");
+          document.getElementById("leaveBtn").disabled = false;
+          document.getElementById("gameInfo").style.display = "block";
+          updateGameInfo(data);
+        });
+
+        socket.on("gameResult", (data) => {
+          log("Game result: " + JSON.stringify(data));
+          const winner =
+            data.winnerId === currentPlayer?.id ? "You won!" : "You lost!";
+          updateStatus(
+            winner,
+            data.winnerId === currentPlayer?.id ? "connected" : "disconnected"
+          );
+          document.getElementById("gameInfo").style.display = "none";
+        });
+
+        socket.on("error", (data) => {
+          log("Error: " + JSON.stringify(data));
+          updateStatus("Error occurred", "disconnected");
+        });
+      }
+
+      function disconnect() {
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+          log("Disconnected from server");
+        }
+      }
+
+      function joinGame() {
+        const playerName = document.getElementById("playerName").value;
+        if (!playerName) {
+          alert("Please enter a player name");
+          return;
+        }
+
+        currentPlayer = {
+          id: "player_" + Date.now(),
+          name: playerName,
+        };
+
+        socket.emit("joinGame", {
+          player: currentPlayer,
+        });
+
+        log("Joining game as: " + playerName);
+      }
+
+      function leaveGame() {
+        if (currentGame) {
+          socket.emit("leaveGame", {
+            gameId: currentGame.gameId,
+            playerId: currentPlayer?.id,
+          });
+          log("Left game");
+          document.getElementById("gameInfo").style.display = "none";
+          document.getElementById("leaveBtn").disabled = true;
+        }
+      }
+
+      function submitAnswer(answer) {
+        if (currentGame && currentPlayer) {
+          socket.emit("submitAnswer", {
+            gameId: currentGame.gameId,
+            playerId: currentPlayer.id,
+            answer: answer,
+          });
+          log("Submitted answer: " + answer);
+        }
+      }
+
+      function updateGameInfo(gameData) {
+        const puzzle = gameData.currentPuzzle;
+
+        document.getElementById("gameStatus").innerHTML = `
+                <p><strong>Game ID:</strong> ${gameData.gameId}</p>
+                <p><strong>Players:</strong> ${gameData.player1.name} vs ${gameData.player2.name}</p>
+                <p><strong>Time Remaining:</strong> ${gameData.timeRemaining}s</p>
+            `;
+
+        document.getElementById("puzzleInfo").innerHTML = `
+                <h4>Question:</h4>
+                <p>${puzzle.question}</p>
+            `;
+
+        const answerButtons = document.getElementById("answerButtons");
+        answerButtons.innerHTML = "<h4>Answer Options:</h4>";
+        puzzle.options.forEach((option) => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.onclick = () => submitAnswer(option);
+          answerButtons.appendChild(button);
+        });
+      }
+    </script>
+  </body>
+</html>
