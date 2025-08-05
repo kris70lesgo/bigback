@@ -31,7 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   lottie: ^2.7.0
-  supabase_flutter: ^2.0.0
+  supabase_flutter: ^2.9.1
   
 
 
