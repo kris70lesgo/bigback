@@ -3,9 +3,6 @@ import 'package:lottie/lottie.dart';
 import 'package:game/components/fancybutton.dart';
 import 'package:game/screen/login.dart';
 
-//database
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 void main() {
   runApp(MyApp());
 }
