@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,15 +13,18 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
+  late final GoogleSignIn _googleSignIn;
 
-  // TODO: Replace these with your actual Google client IDs
-  static const String webClientId = 'your-web-client-id.apps.googleusercontent.com';
-  static const String iosClientId = 'your-ios-client-id.apps.googleusercontent.com';
-
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: iosClientId, // iOS client ID
-    serverClientId: webClientId, // Web client ID for Supabase
-  );
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize GoogleSignIn with environment variables
+    _googleSignIn = GoogleSignIn(
+      clientId: dotenv.env['GOOGLE_IOS_CLIENT_ID'], // iOS client ID from .env
+      serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'], // Web client ID from .env
+    );
+  }
 
   Future<void> _handleContinuePressed() async {
     setState(() {
