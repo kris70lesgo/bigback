@@ -1,6 +1,6 @@
 # game
 
-A new flutter project.
+A new flutter project
 
 ## Getting Started
 
